@@ -38,7 +38,7 @@
     <div class="chat-input">
       <div required class="input-container">
         <input type="text" id="userInput" placeholder="Type your message..." onkeypress="handleKeyPress(event)"
-          autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" required >
+          autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" required>
         <button type="button" id="sendButton" onclick="sendMessage()">
           <span id="sendButtonText">Send</span>
           <span id="sendButtonSpinner" class="spinner" style="display: none;"></span>
@@ -48,124 +48,124 @@
 
     <!-- Copyright Footer -->
     <div class="copyright-footer">
-     <p>&nbsp; &copy;  2025 Jazib Services INC. All rights reserved. &nbsp; </p>
+      <p>&nbsp; &copy; 2025 Jazib Services INC. All rights reserved. &nbsp; </p>
     </div>
   </div>
 </body>
 <script>
 
-    
-    // Enable send button when there's text
-    document.getElementById('userInput').addEventListener('input', function() {
-      const sendButton = document.getElementById('sendButton');
-      sendButton.disabled = this.value.trim() === '';
-    });
+  // Note that the JavaScript is written by Claude AI, and it is designed to work with the HTML structure provided above.
+  // Enable send button when there's text
+  document.getElementById('userInput').addEventListener('input', function () {
+    const sendButton = document.getElementById('sendButton');
+    sendButton.disabled = this.value.trim() === '';
+  });
 
-    function handleKeyPress(event) {
-      if (event.key === 'Enter' && !event.shiftKey) {
-        event.preventDefault();
-        sendMessage();
-      }
+  function handleKeyPress(event) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      sendMessage();
     }
+  }
 
-    async function sendMessage() {
-      const userInput = document.getElementById('userInput');
-      const sendButton = document.getElementById('sendButton');
-      const chatMessages = document.getElementById('chatMessages');
-      const loadingIndicator = document.getElementById('loadingIndicator');
-      const sendButtonText = document.getElementById('sendButtonText');
-      const sendButtonSpinner = document.getElementById('sendButtonSpinner');
-      
-      const message = userInput.value.trim();
-      if (!message) return;
+  async function sendMessage() {
+    const userInput = document.getElementById('userInput');
+    const sendButton = document.getElementById('sendButton');
+    const chatMessages = document.getElementById('chatMessages');
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    const sendButtonText = document.getElementById('sendButtonText');
+    const sendButtonSpinner = document.getElementById('sendButtonSpinner');
 
-      // Disable input and show loading state
-      userInput.disabled = true;
-      sendButton.disabled = true;
-      sendButtonText.style.display = 'none';
-      sendButtonSpinner.style.display = 'inline-block';
+    const message = userInput.value.trim();
+    if (!message) return;
 
-      // Add user message to chat
-      const userMessageDiv = document.createElement('div');
-      userMessageDiv.className = 'user-message message';
-      userMessageDiv.innerHTML = `
+    // Disable input and show loading state
+    userInput.disabled = true;
+    sendButton.disabled = true;
+    sendButtonText.style.display = 'none';
+    sendButtonSpinner.style.display = 'inline-block';
+
+    // Add user message to chat
+    const userMessageDiv = document.createElement('div');
+    userMessageDiv.className = 'user-message message';
+    userMessageDiv.innerHTML = `
         <div class="message-content">${escapeHtml(message)}</div>
         <div class="message-time">${new Date().toLocaleTimeString()}</div>
       `;
-      chatMessages.appendChild(userMessageDiv);
+    chatMessages.appendChild(userMessageDiv);
 
-      // Clear input
-      userInput.value = '';
+    // Clear input
+    userInput.value = '';
 
-      // Show loading indicator
-      loadingIndicator.style.display = 'flex';
+    // Show loading indicator
+    loadingIndicator.style.display = 'flex';
 
-      // Scroll to bottom
-      chatMessages.scrollTop = chatMessages.scrollHeight;
+    // Scroll to bottom
+    chatMessages.scrollTop = chatMessages.scrollHeight;
 
-      try {
-        const response = await fetch('/chat', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ content: message }),
-        });
+    try {
+      const response = await fetch('/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ content: message }),
+      });
 
-        const data = await response.json();
+      const data = await response.json();
 
-        if (response.ok) {
-          // Add bot response to chat
-          const botMessageDiv = document.createElement('div');
-          botMessageDiv.className = 'bot-message message';
-          botMessageDiv.innerHTML = `
+      if (response.ok) {
+        // Add bot response to chat
+        const botMessageDiv = document.createElement('div');
+        botMessageDiv.className = 'bot-message message';
+        botMessageDiv.innerHTML = `
             <div class="message-content">${escapeHtml(data.response || 'Sorry, I couldn\'t generate a response.')}</div>
             <div class="message-time">${new Date().toLocaleTimeString()}</div>
           `;
-          chatMessages.appendChild(botMessageDiv);
-        } else {
-          // Add error message
-          const errorMessageDiv = document.createElement('div');
-          errorMessageDiv.className = 'bot-message message error';
-          errorMessageDiv.innerHTML = `
-            <div class="message-content">Sorry, I encountered an error: ${escapeHtml(data.error || 'Unknown error')}</div>
-            <div class="message-time">${new Date().toLocaleTimeString()}</div>
-          `;
-          chatMessages.appendChild(errorMessageDiv);
-        }
-      } catch (error) {
-        // Add network error message
+        chatMessages.appendChild(botMessageDiv);
+      } else {
+        // Add error message
         const errorMessageDiv = document.createElement('div');
         errorMessageDiv.className = 'bot-message message error';
         errorMessageDiv.innerHTML = `
+            <div class="message-content">Sorry, I encountered an error: ${escapeHtml(data.error || 'Unknown error')}</div>
+            <div class="message-time">${new Date().toLocaleTimeString()}</div>
+          `;
+        chatMessages.appendChild(errorMessageDiv);
+      }
+    } catch (error) {
+      // Add network error message
+      const errorMessageDiv = document.createElement('div');
+      errorMessageDiv.className = 'bot-message message error';
+      errorMessageDiv.innerHTML = `
           <div class="message-content">Sorry, I couldn't connect to the server. Please try again.</div>
           <div class="message-time">${new Date().toLocaleTimeString()}</div>
         `;
-        chatMessages.appendChild(errorMessageDiv);
-      } finally {
-        // Hide loading and restore input
-        loadingIndicator.style.display = 'none';
-        userInput.disabled = false;
-        sendButton.disabled = false;
-        sendButtonText.style.display = 'inline';
-        sendButtonSpinner.style.display = 'none';
-        userInput.focus();
+      chatMessages.appendChild(errorMessageDiv);
+    } finally {
+      // Hide loading and restore input
+      loadingIndicator.style.display = 'none';
+      userInput.disabled = false;
+      sendButton.disabled = false;
+      sendButtonText.style.display = 'inline';
+      sendButtonSpinner.style.display = 'none';
+      userInput.focus();
 
-        // Scroll to bottom
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-      }
+      // Scroll to bottom
+      chatMessages.scrollTop = chatMessages.scrollHeight;
     }
+  }
 
-    function escapeHtml(text) {
-      const div = document.createElement('div');
-      div.textContent = text;
-      return div.innerHTML;
-    }
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
 
-    // Focus input on page load
-    window.addEventListener('load', function() {
-      document.getElementById('userInput').focus();
-    });
+  // Focus input on page load
+  window.addEventListener('load', function () {
+    document.getElementById('userInput').focus();
+  });
 </script>
-<script src="./static/app.js"></script>
+
 </html>
