@@ -1,9 +1,18 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
-import random
+import torch
+from transformers import pipeline
 
 app = FastAPI()
+
+# Initialize the TinyLlama model pipeline once at startup
+pipe = pipeline(
+    "text-generation", 
+    model="TinyLlama/TinyLlama-1.1B-Chat-v1.0", 
+    torch_dtype=torch.bfloat16, 
+    device_map="auto"
+)
 
 # Mount the static folder (for CSS & JS)
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -13,4 +22,78 @@ def get_chat_page():
     with open("index.html", "r", encoding="utf-8") as f:
         return f.read()
 
+def generate_response(user_content: str) -> str:
+    try:
+        print(f"Generating response for user content: {user_content}")
+        # Format messages using the tokenizer's chat template
+        messages = [
+            {
+                "role": "system",
+                "content": "You are a friendly chatbot who always talks by recognizing the user and their problem and then generates the best advice or solution for the user.",
+            },
+            {
+                "role": "user", 
+                "content": user_content
+            },
+        ]
+        
+        # Apply chat template
+        prompt = pipe.tokenizer.apply_chat_template(
+            messages, 
+            tokenize=False, 
+            add_generation_prompt=True
+        )
+        
+        # Generate response
+        outputs = pipe(
+            prompt, 
+            max_new_tokens=256, 
+            do_sample=True, 
+            temperature=0.7, 
+            top_k=50, 
+            top_p=0.95
+        )
+        
+        # Extract the generated text
+        generated_text = outputs[0]["generated_text"]
+        
+        # Remove the prompt part to get only the response
+        response = generated_text[len(prompt):].strip()
+        
+        print(f"Generated response: {response}")
+        return response
+        
+    except Exception as e:
+        print(f"Error generating response: {str(e)}")
+        raise e
 
+@app.post("/chat", response_class=JSONResponse)
+async def chat(request: Request):
+    try:
+        data = await request.json()
+        content = data.get("content", "")
+        
+        if not content:
+            return JSONResponse(
+                content={"error": "No content provided"}, 
+                status_code=400
+            )
+        
+        # Generate response using TinyLlama
+        response = generate_response(content)
+        
+        return JSONResponse(content={
+            "response": response,
+            "status": "success"
+        })
+        
+    except Exception as e:
+        print(f"Chat endpoint error: {str(e)}")
+        return JSONResponse(
+            content={"error": f"Failed to generate response: {str(e)}"}, 
+            status_code=500
+        )
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)

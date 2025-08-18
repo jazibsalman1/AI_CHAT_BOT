@@ -1,32 +1,171 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="./static/styles.css">
   <title>AI Chatbot</title>
 </head>
+
 <body>
   <div class="chat-container">
     <!-- Header -->
-    <div class="chat-header">AI Chatbot</div>
+    <div class="chat-header">
+      <h1>🤖 AI Chatbot</h1>
+      <p>Powered by TinyLlama</p>
+    </div>
 
     <!-- Messages Area -->
     <div class="chat-messages" id="chatMessages">
-      <div class="bot-message message">Hello! How can I help you today?</div>
+      <div class="bot-message message">
+        <div class="message-content">Hello! How can I help you today?</div>
+        <div class="message-time" id="welcomeTime"></div>
+      </div>
     </div>
 
-    <!-- Bot Response Area (separate div) -->
-    <div class="chat-response" id="chatResponse">
-      <!-- Latest bot response will appear here -->
+    <!-- Loading Indicator -->
+    <div class="loading-indicator" id="loadingIndicator" style="display: none;">
+      <div class="typing-dots">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+      <span>AI is thinking...</span>
     </div>
 
     <!-- Input Area -->
     <div class="chat-input">
-      <input type="text" id="userInput" placeholder="Type your message...">
-      <button onclick="sendMessage()">Send</button>
+      <div required class="input-container">
+        <input type="text" id="userInput" placeholder="Type your message..." onkeypress="handleKeyPress(event)"
+          autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" required >
+        <button type="button" id="sendButton" onclick="sendMessage()">
+          <span id="sendButtonText">Send</span>
+          <span id="sendButtonSpinner" class="spinner" style="display: none;"></span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Copyright Footer -->
+    <div class="copyright-footer">
+      <p>&copy; 2025 Jazib Service INC. All rights reserved. Powerded By TinyLlama</p>
     </div>
   </div>
-  <script src="./static/app.js"></script>
 </body>
+<script>
+
+    
+    // Enable send button when there's text
+    document.getElementById('userInput').addEventListener('input', function() {
+      const sendButton = document.getElementById('sendButton');
+      sendButton.disabled = this.value.trim() === '';
+    });
+
+    function handleKeyPress(event) {
+      if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        sendMessage();
+      }
+    }
+
+    async function sendMessage() {
+      const userInput = document.getElementById('userInput');
+      const sendButton = document.getElementById('sendButton');
+      const chatMessages = document.getElementById('chatMessages');
+      const loadingIndicator = document.getElementById('loadingIndicator');
+      const sendButtonText = document.getElementById('sendButtonText');
+      const sendButtonSpinner = document.getElementById('sendButtonSpinner');
+      
+      const message = userInput.value.trim();
+      if (!message) return;
+
+      // Disable input and show loading state
+      userInput.disabled = true;
+      sendButton.disabled = true;
+      sendButtonText.style.display = 'none';
+      sendButtonSpinner.style.display = 'inline-block';
+
+      // Add user message to chat
+      const userMessageDiv = document.createElement('div');
+      userMessageDiv.className = 'user-message message';
+      userMessageDiv.innerHTML = `
+        <div class="message-content">${escapeHtml(message)}</div>
+        <div class="message-time">${new Date().toLocaleTimeString()}</div>
+      `;
+      chatMessages.appendChild(userMessageDiv);
+
+      // Clear input
+      userInput.value = '';
+
+      // Show loading indicator
+      loadingIndicator.style.display = 'flex';
+
+      // Scroll to bottom
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+
+      try {
+        const response = await fetch('/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ content: message }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          // Add bot response to chat
+          const botMessageDiv = document.createElement('div');
+          botMessageDiv.className = 'bot-message message';
+          botMessageDiv.innerHTML = `
+            <div class="message-content">${escapeHtml(data.response || 'Sorry, I couldn\'t generate a response.')}</div>
+            <div class="message-time">${new Date().toLocaleTimeString()}</div>
+          `;
+          chatMessages.appendChild(botMessageDiv);
+        } else {
+          // Add error message
+          const errorMessageDiv = document.createElement('div');
+          errorMessageDiv.className = 'bot-message message error';
+          errorMessageDiv.innerHTML = `
+            <div class="message-content">Sorry, I encountered an error: ${escapeHtml(data.error || 'Unknown error')}</div>
+            <div class="message-time">${new Date().toLocaleTimeString()}</div>
+          `;
+          chatMessages.appendChild(errorMessageDiv);
+        }
+      } catch (error) {
+        // Add network error message
+        const errorMessageDiv = document.createElement('div');
+        errorMessageDiv.className = 'bot-message message error';
+        errorMessageDiv.innerHTML = `
+          <div class="message-content">Sorry, I couldn't connect to the server. Please try again.</div>
+          <div class="message-time">${new Date().toLocaleTimeString()}</div>
+        `;
+        chatMessages.appendChild(errorMessageDiv);
+      } finally {
+        // Hide loading and restore input
+        loadingIndicator.style.display = 'none';
+        userInput.disabled = false;
+        sendButton.disabled = false;
+        sendButtonText.style.display = 'inline';
+        sendButtonSpinner.style.display = 'none';
+        userInput.focus();
+
+        // Scroll to bottom
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      }
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Focus input on page load
+    window.addEventListener('load', function() {
+      document.getElementById('userInput').focus();
+    });
+</script>
+<script src="./static/app.js"></script>
 </html>

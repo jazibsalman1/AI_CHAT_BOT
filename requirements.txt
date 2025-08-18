@@ -4,3 +4,7 @@ pydantic
 requests
 huggingface_hub
 python-dotenv
+torch
+transformers
+sentence-transformers
+scikit-learn
