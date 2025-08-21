@@ -1,0 +1,27 @@
+name: Sync to Hugging Face hub
+
+on:
+  push:
+    branches: [aichatmain]   # 👈 deploy when you push to aichatmain
+  workflow_dispatch:          # 👈 also allow manual trigger
+
+jobs:
+  sync-to-hub:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          lfs: true
+
+      - name: Set Git identity
+        run: |
+          git config --global user.email "jazib1341@gmail.com"
+          git config --global user.name "jazib1341"
+
+      - name: Push to Hugging Face Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          git remote add space https://jazib1341:$HF_TOKEN@huggingface.co/spaces/jazib1341/AIchatbot
+          git push --force space aichatmain:main
