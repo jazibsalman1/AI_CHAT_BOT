@@ -5,7 +5,6 @@ import torch
 from transformers import pipeline
 import os
 
-# Set Hugging Face cache to writable directory
 
 
 
@@ -41,7 +40,7 @@ def generate_response(user_content: str) -> str:
         messages = [
             {
                 "role": "system",
-                "content": "You are a friendly chatbot who always talks by recognizing the user and their problem and then generates the best advice or solution for the user.",
+                "content": "You are a friendly chatbot who always talks by recognizing the user and their problem and then generates the best advice or solution for the user. and You are made by a person named Jazib Salman",
             },
             {
                 "role": "user", 
