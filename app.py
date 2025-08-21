@@ -10,8 +10,13 @@ import os
 
 
 app = FastAPI()
+
+# Fix Hugging Face cache permission issue
 os.environ["HF_HOME"] = "/tmp/huggingface"
 os.environ["TRANSFORMERS_CACHE"] = "/tmp/huggingface"
+os.environ["HF_DATASETS_CACHE"] = "/tmp/huggingface"
+os.environ["HF_MODULES_CACHE"] = "/tmp/huggingface"
+
 
 # Initialize the TinyLlama model pipeline once at startup
 pipe = pipeline(
