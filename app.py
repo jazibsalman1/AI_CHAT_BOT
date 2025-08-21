@@ -3,8 +3,15 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 import torch
 from transformers import pipeline
+import os
+
+# Set Hugging Face cache to writable directory
+
+
 
 app = FastAPI()
+os.environ["HF_HOME"] = "/tmp/huggingface"
+os.environ["TRANSFORMERS_CACHE"] = "/tmp/huggingface"
 
 # Initialize the TinyLlama model pipeline once at startup
 pipe = pipeline(

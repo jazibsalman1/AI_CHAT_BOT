@@ -7,4 +7,4 @@ python-dotenv
 torch==2.2.2
 transformers
 accelerate
-numpy
+numpy<2
